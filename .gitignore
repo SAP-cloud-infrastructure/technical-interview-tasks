@@ -1,0 +1,12 @@
+
+# ignore dot files
+.*
+# but
+!.gitignore
+
+# python files
+*.pyc
+
+
+# helm
+*.tgz
