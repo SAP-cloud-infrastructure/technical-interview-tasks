@@ -1,0 +1,76 @@
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-web-app
+  labels:
+    app.kubernetes.io/name: simple-web-app
+    app.kubernetes.io/instance: simple-web-app
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: simple-web-app
+    app.kubernetes.io/instance: simple-web-app
+
+---
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-web-app
+  labels:
+    app.kubernetes.io/name: simple-web-app
+    app.kubernetes.io/instance: simple-web-app
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: simple-web-app
+      app.kubernetes.io/instance: simple-web-app
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: simple-web-app
+        app.kubernetes.io/instance: simple-web-app
+    spec:
+      securityContext: {}
+      containers:
+        - name: simple-web-app
+          securityContext: {}
+          image: "local/simple-web-server:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /hello-world
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /hello-world
+              port: http
+          resources: {}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: homepage-tester
+spec:
+  containers:
+  - name: tester
+    image: appropriate/curl
+    command: ["/bin/sh", "-c"]
+    args:
+    - |
+      while true; do
+        curl -m 1 -sSf http://simple-web-app:8080/hello-world || exit 1;
+        sleep 10;
+      done
+  restartPolicy: Always
