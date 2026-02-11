@@ -24,6 +24,6 @@
 
 1. Validate if `homepage-tester` is working, and fix if there are issues
 
-2. Change `homepage-tester` to curl `/protected` service endpoint
+2. Change `homepage-tester` Pod to curl `/protected` service endpoint successfuly
 
 3. Implement `/repo-list/{org_name}[?repo_filter=filter]` service endpoint and test it with the `homepage-tester` Pod to list all repositories from `SAP-cloud-infrastructure` github org
