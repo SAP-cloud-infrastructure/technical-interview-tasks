@@ -17,7 +17,19 @@ spec:
   selector:
     app.kubernetes.io/name: simple-web-app
     app.kubernetes.io/instance: simple-web-app
-
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: simple-web-app
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: simple-web-app
+      app.kubernetes.io/instance: simple-web-app
+  policyTypes:
+  - Ingress
+  ingress: []
 ---
 # Deployment
 apiVersion: apps/v1
