@@ -1,4 +1,4 @@
-# Deploy workload to Kubernetes
+# Deploy workloads to Kubernetes
 
 ## Steps:
 
@@ -20,4 +20,10 @@
 
 4. Deploy manifests to Kubernetes
 
-5. Validate if Pod `homepage-tester` is working
+## Tasks
+
+1. Validate if `homepage-tester` is working, and fix if there are issues
+
+2. Change `homepage-tester` to curl `/protected` service endpoint
+
+3. Implement `/repo-list/{org_name}[?repo_filter=filter]` service endpoint and test it with the `homepage-tester` Pod to list all repositories from `SAP-cloud-infrastructure` github org
