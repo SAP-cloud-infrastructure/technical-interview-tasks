@@ -21,7 +21,7 @@ The application provides the following endpoints:
    ```bash
    # Test hello-world endpoint
    curl http://localhost:8080/hello-world
-   
+
    # Test repo-list endpoint
    curl "http://localhost:8080/repo-list/golang?repo_filter=go"
    ```
