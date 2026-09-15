@@ -1,5 +1,5 @@
 CLUSTER_NAME           ?= interview
-REGISTRY_NAME          ?= registry-interview
+REGISTRY_NAME          ?= registry
 REGISTRY_PORT          ?= 5000
 REGISTRY_INTERNAL_PORT := 5000
 REGISTRY_CONFIG        := $(abspath registry-config.json)
