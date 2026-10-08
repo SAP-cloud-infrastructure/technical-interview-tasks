@@ -1,4 +1,4 @@
-# Simple Web App - Go Version
+# Simple Web App - Python Version
 
 ## API Endpoints
 
