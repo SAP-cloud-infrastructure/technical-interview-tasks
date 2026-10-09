@@ -1,0 +1,231 @@
+# A clean deployment of the status-board app that comes up and stays healthy.
+# It contains no NetworkPolicy, so it also works on a cluster whose CNI does not
+# enforce NetworkPolicy (the default CNI of kind and minikube).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: status-board-config
+  labels:
+    app.kubernetes.io/name: status-board
+    app.kubernetes.io/instance: status-board
+data:
+  BOARD_NAME: "SCI Interview Board"
+  ENVIRONMENT: "dev"
+  PORT: "8080"
+  CHECK_TIMEOUT: "2s"
+  CHECK_TARGETS: "echo=http://echo:8080/hello-world"
+  TARGETS_FILE: "/etc/status-board/targets.json"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: status-board-targets
+  labels:
+    app.kubernetes.io/name: status-board
+    app.kubernetes.io/instance: status-board
+data:
+  targets.json: |
+    {
+      "targets": [
+        { "name": "echo", "url": "http://echo:8080/hello-world" }
+      ]
+    }
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: status-board-secrets
+  labels:
+    app.kubernetes.io/name: status-board
+    app.kubernetes.io/instance: status-board
+type: Opaque
+stringData:
+  # Dummy value for this exercise, not a real credential.
+  api-token: "not-a-real-token"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: status-board
+  labels:
+    app.kubernetes.io/name: status-board
+    app.kubernetes.io/instance: status-board
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: status-board
+    app.kubernetes.io/instance: status-board
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: status-board
+  labels:
+    app.kubernetes.io/name: status-board
+    app.kubernetes.io/instance: status-board
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: status-board
+      app.kubernetes.io/instance: status-board
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: status-board
+        app.kubernetes.io/instance: status-board
+    spec:
+      containers:
+        - name: status-board
+          image: "local/status-board:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: status-board-config
+          env:
+            - name: API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: status-board-secrets
+                  key: api-token
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: targets
+              mountPath: /etc/status-board
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: targets
+          configMap:
+            name: status-board-targets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo
+  labels:
+    app.kubernetes.io/name: echo
+    app.kubernetes.io/instance: echo
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: echo
+    app.kubernetes.io/instance: echo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo
+  labels:
+    app.kubernetes.io/name: echo
+    app.kubernetes.io/instance: echo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: echo
+      app.kubernetes.io/instance: echo
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: echo
+        app.kubernetes.io/instance: echo
+    spec:
+      containers:
+        # The same image as the app: /hello-world needs no configuration, which
+        # makes it a stand-in for an upstream the app can probe.
+        - name: echo
+          image: "local/status-board:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: status-board-tester
+  labels:
+    app.kubernetes.io/name: status-board-tester
+    app.kubernetes.io/instance: status-board-tester
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: status-board-tester
+      app.kubernetes.io/instance: status-board-tester
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: status-board-tester
+        app.kubernetes.io/instance: status-board-tester
+    spec:
+      containers:
+        # Keeps calling the app through its Service. It exits (and the pod
+        # restarts) as soon as a call fails, so a red tester means the workload
+        # is not serving.
+        - name: tester
+          image: curlimages/curl:8.11.1
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              while true; do
+                curl -m 2 -sSf http://status-board:8080/hello-world || exit 1;
+                curl -m 2 -sSf http://status-board:8080/settings > /dev/null || exit 1;
+                sleep 10;
+              done
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 32Mi
