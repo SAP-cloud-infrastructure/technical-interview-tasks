@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.22-bullseye AS builder
+FROM golang:1.22-bookworm AS builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o simple-web-app .
 
 # Runtime stage
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 WORKDIR /app
 
