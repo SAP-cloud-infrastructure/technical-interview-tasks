@@ -42,20 +42,28 @@
 
 ## Manifests
 
-- `kubernetes-manifests-working.yaml` — a clean Deployment + Service that deploys
-  and runs as-is (no `NetworkPolicy`, so it works on any cluster). Use this to get
-  the workload up quickly.
+- `kubernetes-manifests.yaml` — troubleshooting exercise for a cluster **without** `NetworkPolicy` enforcement (Docker Desktop, or kind/minikube with their default CNI).
+  `NetworkPolicy`.
 - `kubernetes-manifests-troubleshoot-kind.yaml` — troubleshooting exercise (kind).
 - `kubernetes-manifests-troubleshoot-minikube.yaml` — troubleshooting exercise (minikube).
 
 ## Troubleshooting exercise
 
-The `kubernetes-manifests-troubleshoot-*.yaml` files are alternative deployments
-used for the troubleshooting exercise. They run the same application; the goal is
-to get the workload running and healthy.
+The `kubernetes-manifests*.yaml` files are deployments used for the troubleshooting
+exercise. They run the same application; the goal is to get the workload running and
+healthy.
 
-Follow the steps above to create the cluster and load the image, then deploy the
-manifest for your tool:
+`kubernetes-manifests.yaml` targets a cluster without `NetworkPolicy` enforcement, so
+it does not need the Calico setup from the steps above — a plain Docker Desktop
+cluster (or a default kind/minikube cluster) is enough. Load the image, then deploy:
+
+```bash
+kubectl apply -f kubernetes-manifests.yaml
+```
+
+The `kubernetes-manifests-troubleshoot-*.yaml` files target a cluster that enforces
+`NetworkPolicy`. Follow the steps above to create the cluster and load the image, then
+deploy the manifest for your tool:
 
 ```bash
 # kind
