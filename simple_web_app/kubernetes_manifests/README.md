@@ -4,7 +4,7 @@
 
 1. Clone the repository
 
-2. Create the cluster. Use whichever tool you have:
+2. Create the cluster with a CNI that enforces [`NetworkPolicies`](https://kubernetes.io/docs/concepts/services-networking/network-policies/):
 
    **kind** (v0.24.0+, `NetworkPolicy` enforcement is built in):
 
