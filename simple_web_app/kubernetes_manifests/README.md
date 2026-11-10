@@ -4,16 +4,15 @@
 
 1. Clone the repository
 
-2. Create the cluster with a CNI that enforces `NetworkPolicy` (the default CNI
-   of kind and minikube does not). Use whichever tool you have:
+2. Create the cluster with a CNI that enforces [`NetworkPolicies`](https://kubernetes.io/docs/concepts/services-networking/network-policies/):
 
-   **kind:**
+   **kind** (v0.24.0+, `NetworkPolicy` enforcement is built in):
 
    ```bash
-   ./kind-with-calico.sh
+   kind create cluster --name simple-web-app
    ```
 
-   **minikube:**
+   **minikube** (the default CNI does not enforce `NetworkPolicy`, so Calico is required):
 
    ```bash
    ./minikube-with-calico.sh
